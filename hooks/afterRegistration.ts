@@ -1,7 +1,10 @@
 import { METHOD_CODE } from '../index'
 import i18n from '@vue-storefront/i18n'
+import { isServer } from '@vue-storefront/core/helpers'
+import EventBus from '@vue-storefront/core/compatibility/plugins/event-bus'
+import Vue from 'vue'
 
-export function afterRegistration ({ Vue, config, store, isServer }) {
+export function afterRegistration (appConfig, store) {
   let correctPaymentMethod = false
 
   const placeOrder = () => {
@@ -29,6 +32,7 @@ export function afterRegistration ({ Vue, config, store, isServer }) {
     'offline': false,
     'is_server_method': false
   }
+
   store.dispatch('payment/addMethod', paymentMethodConfig)
 
   if (!isServer) {
@@ -39,14 +43,10 @@ export function afterRegistration ({ Vue, config, store, isServer }) {
     docScript.src = jsUrl
     docHead.appendChild(docScript)
 
-    Vue.prototype.$bus.$on('checkout-before-placeOrder', placeOrder)
+    EventBus.$on('checkout-before-placeOrder', placeOrder)
 
-    Vue.prototype.$bus.$on('checkout-payment-method-changed', (paymentMethodCode) => {
-      if (paymentMethodCode === METHOD_CODE) {
-        correctPaymentMethod = true
-      } else {
-        correctPaymentMethod = false
-      }
+    EventBus.$on('checkout-payment-method-changed', (paymentMethodCode) => {
+      correctPaymentMethod = paymentMethodCode === METHOD_CODE;
     })
   }
 }
