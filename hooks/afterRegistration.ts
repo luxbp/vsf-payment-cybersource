@@ -33,7 +33,7 @@ export function afterRegistration (appConfig, store) {
     'is_server_method': false
   }
 
-  store.dispatch('payment/addMethod', paymentMethodConfig)
+  store.dispatch('checkout/addPaymentMethod', paymentMethodConfig)
 
   if (!isServer) {
     let jsUrl = 'https://flex.cybersource.com/cybersource/assets/microform/0.4.0/flex-microform.min.js'
