@@ -14,7 +14,17 @@
         />
         <span class="help-error" v-if="errors.cardNumber">{{ errors.cardNumber }}</span>
       </div>
-      <div class="col-6">
+      <div class="col-2">
+        <label :id="securityCodeLabelId" :class="[{'text-error' : errors.securityCode }]">{{ t('Security Code') }}</label>
+        <div
+          :id="securityCodeContainerId"
+          :class="[{'has-error' : errors.securityCode }, {disabled}]"
+          :disabled="disabled"
+          class="input"
+        />
+        <span class="help-error" v-if="errors.securityCode">{{ errors.securityCode }}</span>
+      </div>
+      <div class="col-4">
         <div class="card-types">
           <svg class=""><use xlink:href="#payment-cybersource-visa"/></svg>
           <svg class=""><use xlink:href="#payment-cybersource-mastercard"/></svg>
@@ -254,6 +264,8 @@ export default {
       disabled: false,
       labelId: 'payment-cybersource-label',
       containerId: 'payment-cybersource-container',
+      securityCodeLabelId: 'payment-cybersource-cvv-label',
+      securityCodeContainerId: 'payment-cybersource-cvv-container',
       formOptions: {
         placeholder: 'Card Number',
         styles: {
@@ -327,23 +339,20 @@ export default {
     },
     async setupMicroform () {
       const key = await rootStore.dispatch('payment-cybersource/generateKey')
-      window.FLEX.microform({
-        ...this.formOptions,
-        keyId: key.kid,
-        keystore: key,
-        container: '#' + this.containerId,
-        label: '#' + this.labelId
-      }, (error, microformInstance) => {
-        if (error) {
-          console.error(error)
-          return
-        }
+debugger
+      let flex = new window.Flex(key)
+      let microform = flex.microform({ styles: this.formOptions.styles });
+      let number = microform.createField('number', { placeholder: 'Card Number' });
+      let securityCode = microform.createField('securityCode', { placeholder: '•••' });
 
-        microformInstance.on('cardTypeChange', this.onValidationChange)
+      number.on('change',this.onCardChange)
+      securityCode.on('change',this.onSecurityCardChange)
 
-        this.microform = microformInstance
-        this.unblock()
-      })
+      number.load('#' + this.containerId);
+      securityCode.load('#' + this.securityCodeContainerId);
+
+      this.microform = microform
+      this.unblock()
     },
     invalidateMicroform () {
       this.block()
@@ -403,8 +412,22 @@ export default {
       }
       this.errors = errors
     },
+    onCardChange (data) {
+      this.errors.cardNumber = null
+      if (!data.empty && !data.valid) {
+        this.errors.cardNumber = i18n.t('Card number is invalid.')
+      }
+    },
+    onSecurityCardChange(data) {
+      this.errors.securityCode = null
+      if (!data.empty && !data.valid) {
+        this.errors.securityCode = i18n.t('Security code is invalid.')
+      }
+    },
     onValidationChange (data) {
       this.errors.cardNumber = null
+      this.errors.securityCode = null
+
       if (!data || !data.card || data.card.length < 1) {
         this.errors.cardNumber = i18n.t('Card number is invalid')
       }

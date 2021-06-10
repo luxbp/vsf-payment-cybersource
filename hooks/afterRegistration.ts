@@ -36,7 +36,7 @@ export function afterRegistration (appConfig, store) {
   store.dispatch('checkout/addPaymentMethod', paymentMethodConfig)
 
   if (!isServer) {
-    let jsUrl = 'https://flex.cybersource.com/cybersource/assets/microform/0.4.0/flex-microform.min.js'
+    let jsUrl = 'https://flex.cybersource.com/cybersource/assets/microform/0.11/flex-microform.min.js'
     let docHead = document.getElementsByTagName('head')[0]
     let docScript = document.createElement('script')
     docScript.type = 'text/javascript'
